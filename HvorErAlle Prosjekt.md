@@ -9,6 +9,11 @@
   Ikke lag en lang liste med tester.
 * Når jeg bruker "Du" eller "Deg" så refererer dette til Codex ChatGPT
 
+## Sikkerhet
+
+Hardkodet bruker og passord skal brukes.  
+Jeg er klar over risikoen med dette. Men det er den grad av sikkerhet som prosjektet trenger.
+
 ## Kilder
 
 GitHub repo er: https://github.com/Bamsen61/HvorErAlle
@@ -33,7 +38,7 @@ Når appen åpnes, vises et kart med en markør for alle brukere.
 * userId er definert i tabellen "## Brukere". Merk at "4" er en userId som teksten "4"  
 * Kartets område beregnes fra bruker- og statiske posisjoner.
 * Ugyldige eller tomme posisjoner forkastes.
-* Klikk på markør åpner Google maps på den posisjonen via URL.
+* Klikk på en markør åpner Google Maps på den posisjonen via en universell Google Maps URL.
 * Det er ingen funksjon for å fjerne posisjoner. Appen og databasen vil bli slettet når turen er over.
 
 ## WEB Frontend
@@ -44,6 +49,22 @@ Når HvorErAlle lagres på Hjem-Skjermen skal den ha et eget ikon.
 * PWA-en må ha `manifest.webmanifest`, service worker, HTTPS, `start_url`, `display`, `theme_color`, `background_color` og ikoner.
 * Appen deployes med GitHub Actions med adresse "https://bamsen61.github.io/HvorErAlle/index.html?Key=9MOvJJGRc7"  
   "Key" er forskjellig for hver bruker.  
+
+## Kart
+
+* Det interaktive kartet i appen skal lages med Leaflet og kartdata fra OpenStreetMap.
+* OpenStreetMaps standard raster tiles skal lastes fra `https://tile.openstreetmap.org/{z}/{x}/{y}.png` over HTTPS.
+* Leaflet-versjonen skal låses til en konkret, testet versjon. Leaflet JavaScript og CSS kan lagres lokalt i repoet slik at appen ikke er avhengig av en CDN.
+* Kartet krever ingen Google Maps API key eller Google Cloud billing account.
+* Synlig attribution skal alltid vises på kartet: `© OpenStreetMap contributors`, med lenke til `https://www.openstreetmap.org/copyright`.
+* Service worker skal ikke forhåndslaste eller lage egen offline-cache av OpenStreetMap tiles. Nettleserens vanlige HTTP-cache skal brukes slik at OpenStreetMaps cache-regler respekteres.
+* Det skal ikke implementeres bulk download, tile scraping eller offline-nedlasting av kartområder.
+* Tile URL skal defineres ett sted i JavaScript slik at kartleverandør enkelt kan byttes senere.
+* Markører, farger, popup og automatisk kartutsnitt skal håndteres av Leaflet.
+* Klikk på en markør skal åpne følgende universelle Google Maps URL i ny fane eller Google Maps-appen hvis den er installert:
+  `https://www.google.com/maps/search/?api=1&query=<latitude>%2C<longitude>`
+* Latitude og longitude skal URL-encodes før Google Maps URL-en åpnes.
+* Google Maps URLs krever ikke API key eller billing account.
 
 ## Lage ikon
 
@@ -103,48 +124,51 @@ Accuracy viser "Fine" eller "Coarse" etter hva brukeren har tillatt.
 
 ### Første gang
 
-1. Brukeren får en personlig tilpasset lenke på SMS med navnet kodet inn.
-2. Gi tilgang til å lese detaljert posisjon. Hver gang appen brukes.
-3. Appen legges på hjem-skjermen.
-4. Hvis brukeren avslår location permission, skal applikasjonen be om tilgang igjen.
+1. Brukeren får en personlig tilpasset lenke på SMS med navnet kodet inn.  
+2. Gi tilgang til å lese detaljert posisjon. Hver gang appen brukes.  
+3. Appen legges på hjem-skjermen.  
+4. Hvis brukeren avslår location permission termineres appen.  
 
 ### Normal bruk
 
 1. Når appen åpnes, leses nøyaktig posisjon fra telefonen.  
    Posisjonen leses bare en gang, hver gang applikasjonen får fokus.  
 2. Posisjonen lagres i en felles database med siste posisjon pr. navn.  
-3. Google maps vises der alle brukeres siste posisjon vises.  
+3. Et interaktivt Leaflet-kart med OpenStreetMap som kartbakgrunn viser alle brukernes siste posisjon.  
    Kartet skal bare dekke det området som inneholder posisjoner.
 4. Kartet viser personer
 	* Grønn markør for 0 - 20 minutter
 	* Gul markør for 20 - 45 minutter
 	* Rød markør for mer enn 45 minutter
-5. Kartet viser hvit markør statiske steder
+5. Kartet viser hvit markør for statiske steder
 	* Hotell
 	* Restauranter
 	* Aktiviteter
-6. Kartet skal være et 'live' Google map så brukerne kan  
-   klikke på markører for å få veibeskrivelse og lignende.
+6. Kartet skal oppdateres live fra Firebase. Når brukeren klikker på en markør, åpnes Google Maps på den valgte posisjonen slik at brukeren kan få veibeskrivelse og lignende.
 
 ## Brukere
 
-Det er 11 brukere i år.
+Det er 11 brukere i år.  
+Brukerne er allerede definert i databasen.  
 
-| Key        | userID  | Platform | Timestamp           | Location                               | Telefon   |  
-|------------|---------|----------|---------------------|----------------------------------------|-----------|  
-| J2ZrXMP0wj | 4       | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 9088 3528 |  
-| Tst5rLb7Ae | Frank   | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 9204 5716 |  
-| f4XPSqhTJD | Herold  | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 9159 3333 |  
-| 9MOvJJGRc7 | Kropp   | Android  | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 9002 5903 |  
-| gsvweXC8cB | Magne   | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 9118 4261 |  
-| M2tgVaUDrK | Martin  | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 7383 4373 |  
-| qhEI1lwqDq | Ole Tom | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 9268 5825 |  
-| rZGKuHEAnw | Steinar | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 9322 9932 |  
-| hOGUL3Ijh5 | Stig    | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 9384 1324 |  
-| ifP5y9KtfJ | TC      | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 9592 7203 |  
-| tjwXHGA8b8 | Tedd    | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 | 9921 7229 |  
+| Key        | userID  | Platform | Timestamp           | Location                               |  
+|------------|---------|----------|---------------------|----------------------------------------|  
+| J2ZrXMP0wj | 4       | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+| Tst5rLb7Ae | Frank   | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+| f4XPSqhTJD | Herold  | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+| 9MOvJJGRc7 | Kropp   | Android  | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+| gsvweXC8cB | Magne   | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+| M2tgVaUDrK | Martin  | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+| qhEI1lwqDq | Ole Tom | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+| rZGKuHEAnw | Steinar | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+| hOGUL3Ijh5 | Stig    | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+| ifP5y9KtfJ | TC      | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+| tjwXHGA8b8 | Tedd    | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
 
 ## Statiske posisjoner
+
+Det er 6 statiske lokasjoner i år.  
+Lokasjonene er allerede definert i databasen.  
 
 | Key        | userID        | Platform | Timestamp           | Location                               |  
 |------------|---------------|----------|---------------------|----------------------------------------|  
@@ -154,3 +178,19 @@ Det er 11 brukere i år.
 | 4mfykAkXdh | Saltgruver    | Static   | 2026-07-04 10:10:10 | 49.98453352281953, 20.054083210160986  |  
 | b1sR8OHdGM | Big Gun       | Static   | 2026-07-04 10:10:10 | 50.0253557878794, 19.864912375686774   |  
 | gTyS7E0bd8 | Flyplass      | Static   | 2026-07-04 10:10:10 | 50.081347188044134, 19.78594814351061  |  
+
+## Telefonliste
+
+| userID  | Telefon   |  
+|---------|-----------|  
+| 4       | 9088 3528 |  
+| Frank   | 9204 5716 |  
+| Herold  | 9159 3333 |  
+| Kropp   | 9002 5903 |  
+| Magne   | 9118 4261 |  
+| Martin  | 7383 4373 |  
+| Ole Tom | 9268 5825 |  
+| Steinar | 9322 9932 |  
+| Stig    | 9384 1324 |  
+| TC      | 9592 7203 |  
+| Tedd    | 9921 7229 |  
