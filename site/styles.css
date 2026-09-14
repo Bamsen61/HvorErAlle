@@ -133,6 +133,7 @@ main { position: relative; }
 .marker-label {
   position: absolute;
   display: block;
+  appearance: none;
   padding: 2px 5px;
   border: 1px solid #17324d99;
   border-radius: 4px;
@@ -143,7 +144,12 @@ main { position: relative; }
   font-weight: 700;
   line-height: 16px;
   white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
 }
+
+.marker-label:focus-visible { outline: 3px solid #1677ff; outline-offset: 2px; }
 
 .marker-label.fresh { border-left: 4px solid #1fbf63; }
 .marker-label.aging { border-left: 4px solid #ffd43b; }

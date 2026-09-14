@@ -29,7 +29,7 @@ const map = L.map("map", { zoomControl: true });
 const markerLayer = L.layerGroup().addTo(map);
 const labelOverlay = document.createElement("div");
 labelOverlay.className = "marker-label-overlay";
-labelOverlay.setAttribute("aria-hidden", "true");
+labelOverlay.setAttribute("aria-label", "Posisjonsmarkører");
 map.getContainer().append(labelOverlay);
 let records = {};
 let labelItems = [];
@@ -86,9 +86,12 @@ function renderLabels() {
 
   const elements = labelItems.map(item => {
     const point = map.latLngToContainerPoint([item.lat, item.lng]);
-    const label = document.createElement("span");
+    const label = document.createElement("button");
+    label.type = "button";
     label.className = `marker-label ${item.kind}`;
     label.textContent = item.name;
+    label.setAttribute("aria-label", `Åpne ${item.name} i Google Maps`);
+    label.addEventListener("click", item.activate);
     labelOverlay.append(label);
     const box = label.getBoundingClientRect();
     return { ...item, x: point.x, y: point.y - 11, width: box.width, height: box.height, label };
@@ -137,12 +140,13 @@ function renderMarkers() {
     });
     const timeText = isStatic ? "Fast sted" : `Sist sett: ${record.Timestamp || "Ukjent"}`;
     marker.bindPopup(`<p class="marker-name">${escapeHtml(record.userID)}</p><p class="marker-time">${escapeHtml(timeText)}</p>`);
-    marker.on("click", () => {
+    const activate = () => {
       marker.openPopup();
       window.open(googleMapsUrl(location.lat, location.lng), "_blank", "noopener,noreferrer");
-    });
+    };
+    marker.on("click", activate);
     marker.addTo(markerLayer);
-    labelItems.push({ name: record.userID, lat: location.lat, lng: location.lng, kind });
+    labelItems.push({ name: record.userID, lat: location.lat, lng: location.lng, kind, activate });
     bounds.push([location.lat, location.lng]);
   }
 

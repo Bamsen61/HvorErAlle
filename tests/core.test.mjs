@@ -81,3 +81,10 @@ test("Firebase Auth uses an isolated named app", () => {
   assert.match(source, /database = app\.database\(\)/);
   assert.doesNotMatch(source, /firebase\.auth\(\)\.signInWithEmailAndPassword/);
 });
+
+test("marker and label use the same activation function", () => {
+  const source = readFileSync(new URL("../site/app.js", import.meta.url), "utf8");
+  assert.match(source, /label\.addEventListener\("click", item\.activate\)/);
+  assert.match(source, /marker\.on\("click", activate\)/);
+  assert.match(source, /labelItems\.push\(\{[^}]*activate[^}]*\}\)/);
+});
