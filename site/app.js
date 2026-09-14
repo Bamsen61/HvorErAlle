@@ -6,7 +6,8 @@ import {
   freshnessClass,
   googleMapsUrl,
   detectPlatform,
-  accuracyLabel
+  accuracyLabel,
+  layoutLabels
 } from "./js/core.mjs";
 
 const TILE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -26,7 +27,13 @@ const identity = document.querySelector("#identity");
 const status = document.querySelector("#status");
 const map = L.map("map", { zoomControl: true });
 const markerLayer = L.layerGroup().addTo(map);
+const labelOverlay = document.createElement("div");
+labelOverlay.className = "marker-label-overlay";
+labelOverlay.setAttribute("aria-hidden", "true");
+map.getContainer().append(labelOverlay);
 let records = {};
+let labelItems = [];
+let labelFrame = null;
 let captureNeeded = true;
 let captureInFlight = false;
 let dataReference = null;
@@ -66,8 +73,50 @@ function markerIcon(kind) {
   });
 }
 
+function renderLabels() {
+  labelFrame = null;
+  labelOverlay.replaceChildren();
+  if (!labelItems.length) return;
+
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.classList.add("marker-label-lines");
+  labelOverlay.append(svg);
+
+  const elements = labelItems.map(item => {
+    const point = map.latLngToContainerPoint([item.lat, item.lng]);
+    const label = document.createElement("span");
+    label.className = `marker-label ${item.kind}`;
+    label.textContent = item.name;
+    labelOverlay.append(label);
+    const box = label.getBoundingClientRect();
+    return { ...item, x: point.x, y: point.y - 11, width: box.width, height: box.height, label };
+  });
+
+  const size = map.getSize();
+  const positions = layoutLabels(elements, size.x, size.y);
+  elements.forEach((item, index) => {
+    const position = positions[index];
+    item.label.style.left = `${position.left}px`;
+    item.label.style.top = `${position.top}px`;
+
+    const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+    line.classList.add("marker-label-line", item.kind);
+    line.setAttribute("x1", item.x);
+    line.setAttribute("y1", item.y);
+    line.setAttribute("x2", position.edgeX);
+    line.setAttribute("y2", position.edgeY);
+    svg.append(line);
+  });
+}
+
+function scheduleLabelRender() {
+  if (labelFrame !== null) return;
+  labelFrame = requestAnimationFrame(renderLabels);
+}
+
 function renderMarkers() {
   markerLayer.clearLayers();
+  labelItems = [];
   const combined = { ...STATIC_LOCATIONS, ...records };
   const bounds = [];
 
@@ -91,11 +140,13 @@ function renderMarkers() {
       window.open(googleMapsUrl(location.lat, location.lng), "_blank", "noopener,noreferrer");
     });
     marker.addTo(markerLayer);
+    labelItems.push({ name: record.userID, lat: location.lat, lng: location.lng, kind });
     bounds.push([location.lat, location.lng]);
   }
 
   if (bounds.length === 1) map.setView(bounds[0], 15);
   else if (bounds.length > 1) map.fitBounds(bounds, { padding: [28, 28], maxZoom: 16 });
+  scheduleLabelRender();
 }
 
 function terminateApp() {
@@ -191,4 +242,5 @@ if ("serviceWorker" in navigator) {
 }
 
 setInterval(renderMarkers, 60000);
+map.on("move zoom resize", scheduleLabelRender);
 start();

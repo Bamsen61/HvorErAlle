@@ -68,3 +68,51 @@ export function detectPlatform(userAgent = "", platform = "", maxTouchPoints = 0
 export function accuracyLabel(meters) {
   return Number.isFinite(meters) && meters <= 100 ? "Fine" : "Coarse";
 }
+
+function overlapArea(a, b) {
+  const width = Math.max(0, Math.min(a.right, b.right) - Math.max(a.left, b.left));
+  const height = Math.max(0, Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top));
+  return width * height;
+}
+
+export function layoutLabels(items, viewportWidth, viewportHeight) {
+  const margin = 4;
+  const horizontalGap = 18;
+  const verticalGap = 4;
+  const occupied = [];
+  const markerBoxes = items.map(item => ({
+    left: item.x - 13,
+    right: item.x + 13,
+    top: item.y - 25,
+    bottom: item.y + 3
+  }));
+
+  return items.map((item, index) => {
+    const maxSlot = Math.ceil(items.length / 2) + 2;
+    const slots = [0];
+    for (let slot = 1; slot <= maxSlot; slot += 1) slots.push(-slot, slot);
+    const directions = index % 2 === 0 ? [1, -1] : [-1, 1];
+    let best = null;
+
+    for (const slot of slots) {
+      for (const direction of directions) {
+        const rawLeft = direction > 0 ? item.x + horizontalGap : item.x - horizontalGap - item.width;
+        const rawTop = item.y - item.height / 2 + slot * (item.height + verticalGap);
+        const left = Math.max(margin, Math.min(rawLeft, viewportWidth - item.width - margin));
+        const top = Math.max(margin, Math.min(rawTop, viewportHeight - item.height - margin));
+        const rect = { left, top, right: left + item.width, bottom: top + item.height };
+        const overlap = [...markerBoxes, ...occupied].reduce((sum, other) => sum + overlapArea(rect, other), 0);
+        const edgeX = left >= item.x ? left : left + item.width;
+        const edgeY = Math.max(top + 3, Math.min(item.y, top + item.height - 3));
+        const distance = Math.hypot(edgeX - item.x, edgeY - item.y);
+        const score = overlap * 1000 + Math.abs(rawLeft - left) * 100 + Math.abs(rawTop - top) * 100 + distance;
+        if (!best || score < best.score) best = { left, top, edgeX, edgeY, rect, score };
+        if (score < 100) break;
+      }
+      if (best?.score < 100) break;
+    }
+
+    occupied.push(best.rect);
+    return { left: best.left, top: best.top, edgeX: best.edgeX, edgeY: best.edgeY };
+  });
+}

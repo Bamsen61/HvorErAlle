@@ -8,7 +8,8 @@ import {
   freshnessClass,
   googleMapsUrl,
   detectPlatform,
-  accuracyLabel
+  accuracyLabel,
+  layoutLabels
 } from "../site/js/core.mjs";
 
 test("all 11 invitation keys are present and user 4 remains text", () => {
@@ -47,4 +48,27 @@ test("platform and accuracy labels follow the supported values", () => {
   assert.equal(detectPlatform("Mozilla", "Win32", 0), "Ukjent");
   assert.equal(accuracyLabel(30), "Fine");
   assert.equal(accuracyLabel(250), "Coarse");
+});
+
+test("labels at the same marker are placed without overlap and on both sides", () => {
+  const items = Array.from({ length: 11 }, () => ({ x: 200, y: 180, width: 70, height: 22 }));
+  const labels = layoutLabels(items, 400, 400);
+  const rectangles = labels.map(label => ({
+    left: label.left,
+    right: label.left + 70,
+    top: label.top,
+    bottom: label.top + 22
+  }));
+
+  for (let first = 0; first < rectangles.length; first += 1) {
+    for (let second = first + 1; second < rectangles.length; second += 1) {
+      const a = rectangles[first];
+      const b = rectangles[second];
+      const overlaps = a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+      assert.equal(overlaps, false);
+    }
+  }
+
+  assert.ok(rectangles.some(label => label.right < 200));
+  assert.ok(rectangles.some(label => label.left > 200));
 });
