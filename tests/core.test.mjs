@@ -1,5 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import {
   USERS,
   parseLocation,
@@ -71,4 +72,12 @@ test("labels at the same marker are placed without overlap and on both sides", (
 
   assert.ok(rectangles.some(label => label.right < 200));
   assert.ok(rectangles.some(label => label.left > 200));
+});
+
+test("Firebase Auth uses an isolated named app", () => {
+  const source = readFileSync(new URL("../site/app.js", import.meta.url), "utf8");
+  assert.match(source, /initializeApp\(firebaseConfig, "hvoreralle"\)/);
+  assert.match(source, /auth = app\.auth\(\)/);
+  assert.match(source, /database = app\.database\(\)/);
+  assert.doesNotMatch(source, /firebase\.auth\(\)\.signInWithEmailAndPassword/);
 });

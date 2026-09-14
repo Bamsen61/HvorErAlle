@@ -38,6 +38,8 @@ let captureNeeded = true;
 let captureInFlight = false;
 let dataReference = null;
 let dataCallback = null;
+let auth = null;
+let database = null;
 
 L.tileLayer(TILE_URL, {
   maxZoom: 19,
@@ -178,7 +180,7 @@ async function capturePositionOnce() {
     const { latitude, longitude, accuracy } = position.coords;
     if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) throw new Error("Enheten returnerte en ugyldig posisjon.");
 
-    await firebase.database().ref(`hvoreralle/${currentKey}`).update({
+    await database.ref(`hvoreralle/${currentKey}`).update({
       userID: currentUser,
       Location: `${latitude}, ${longitude}`,
       Timestamp: formatTimestamp(),
@@ -204,21 +206,36 @@ function armNextCapture() {
 
 async function authenticate() {
   if (!window.firebase) throw new Error("Firebase SDK ble ikke lastet.");
-  if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-  await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
   const decode = value => atob(value);
-  await firebase.auth().signInWithEmailAndPassword(
-    decode("bW9ydGVuLnN0ZWllbkBnZXRtYWlsLm5v"),
-    decode("cFRrQWN5WDhkOQ==")
-  );
+  const email = decode("bW9ydGVuLnN0ZWllbkBnZXRtYWlsLm5v");
+  const password = decode("cFRrQWN5WDhkOQ==");
+
+  const existingDefault = firebase.apps.find(app => app.name === "[DEFAULT]");
+  const legacyApp = existingDefault || firebase.initializeApp(firebaseConfig);
+  const legacyAuth = legacyApp.auth();
+  const legacyUser = await new Promise((resolve, reject) => {
+    let stopListening = () => {};
+    stopListening = legacyAuth.onAuthStateChanged(user => {
+      stopListening();
+      resolve(user);
+    }, reject);
+  });
+  if (legacyUser?.email === email) await legacyAuth.signOut();
+  if (!existingDefault) await legacyApp.delete();
+
+  const app = firebase.apps.find(candidate => candidate.name === "hvoreralle")
+    || firebase.initializeApp(firebaseConfig, "hvoreralle");
+  auth = app.auth();
+  database = app.database();
+  await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+  await auth.signInWithEmailAndPassword(email, password);
 }
 
 async function start() {
   try {
     showStatus("Logger inn …");
     await authenticate();
-    dataReference = firebase.database().ref("hvoreralle");
+    dataReference = database.ref("hvoreralle");
     dataCallback = snapshot => {
       records = snapshot.val() || {};
       renderMarkers();
