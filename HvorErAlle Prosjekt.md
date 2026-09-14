@@ -12,7 +12,11 @@
 ## Sikkerhet
 
 Hardkodet bruker og passord skal brukes.  
-Jeg er klar over risikoen med dette. Men det er den grad av sikkerhet som prosjektet trenger.
+Jeg er klar over risikoen med dette. Men det er den grad av sikkerhet som prosjektet trenger.  
+Hvis mulig så prøv å skjule hardkodingen noe i applikasjonen. Ikke legg det som variable helt i toppen. 🙂  
+
+Hvis URLen kalles med en ugyldig key, skal den straks avbryte og unloade.  
+Gyldige keys for login er de 11 som er listet i "## Brukere"
 
 ## Kilder
 
