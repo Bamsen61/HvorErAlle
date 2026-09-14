@@ -1,200 +1,315 @@
-# Prosjekt for "HvorErAlle"
+# HvorErAlle – prosjektbeskrivelse og driftsgrunnlag
+
+Sist kontrollert mot produksjonskoden: 2026-09-14.
 
 ## Instruksjoner Codex ChatGPT skal følge
 
-* Hvis noe er uklart så spør før endringer gjøres
-* Alle endringer skal gjøres direkte i filene på "D:\GIT\HvorErAlle\"
-* Ikke list lange endringer i chat
-* Hvis noe må testes så be meg gjøre kun en test av gangen og vent på svar.  
-  Ikke lag en lang liste med tester.
-* Når jeg bruker "Du" eller "Deg" så refererer dette til Codex ChatGPT
+* Hvis noe er uklart, spør før endringer gjøres.
+* Alle endringer skal gjøres direkte i filene under `D:\GIT\HvorErAlle\`.
+* Ikke list lange endringer i chat.
+* Hvis noe må testes av brukeren, be om kun én test av gangen og vent på svar.
+* Når jeg bruker «Du», «Deg» eller lignende, refererer dette til Codex ChatGPT.
+* Handleliste bruker samme Firebase-prosjekt. Endringer må ikke ødelegge data, regler eller innlogging for `handleliste`.
 
-## Sikkerhet
+## Status
 
-Hardkodet bruker og passord skal brukes.  
-Jeg er klar over risikoen med dette. Men det er den grad av sikkerhet som prosjektet trenger.  
-Hvis mulig så prøv å skjule hardkodingen noe i applikasjonen. Ikke legg det som variable helt i toppen. 🙂  
+HvorErAlle er ferdig bygget og publisert som en statisk Progressive Web App (PWA).
 
-Hvis URLen kalles med en ugyldig key, skal den straks avbryte og unloade.  
-Gyldige keys for login er de 11 som er listet i "## Brukere"
-
-## Kilder
-
-GitHub repo er: https://github.com/Bamsen61/HvorErAlle
-Alle filer ligger i lokal kopi av GitHub repo "D:\GIT\HvorErAlle\"  
+* GitHub-repo: `https://github.com/Bamsen61/HvorErAlle`
+* Lokal kopi: `D:\GIT\HvorErAlle\`
+* Produksjon: `https://bamsen61.github.io/HvorErAlle/`
+* Eksempel for Kropp: `https://bamsen61.github.io/HvorErAlle/index.html?Key=9MOvJJGRc7`
+* Publisering skjer automatisk med GitHub Actions ved hver push til `main`.
+* Nettsiden publiseres fra mappen `site/`.
+* Det er ingen build-prosess; applikasjonen består av statisk HTML, CSS og JavaScript.
+* Android Chrome er testet. Løsningen er også tilpasset iOS Safari så langt det er praktisk.
 
 ## Formål
 
-HvorErAlle benyttes når en gruppe er på tur og man vil se hvor alle befinner seg.  
-Når appen åpnes, vises et kart med en markør for alle brukere.  
+HvorErAlle brukes når en gruppe er på tur og vil se hverandres siste kjente posisjon på et kart.
 
-## Beskrivelse
+Hver deltaker får en personlig URL med en gyldig `Key`. Appen:
 
-* GitHub repository for appen er: "https://github.com/Bamsen61/HvorErAlle"
-* Lokal kopi av GitHub repo er: "D:\GIT\HvorErAlle\"
-* Det er en Progressive Web App (PWA)
-* Appen skal støtte Android Chrome og hvis praktisk mulig iOS Safari.
-* Appen er "engangs". Det er ingen konfigurering eller tilpassning.
-* Brukerne er lagt inn i basen med en Key som nøkkel til recorden
-* Innlogging etterpå skjer med en felles hardkodet bruker og passord i HTML filen.  
-* De 11 brukerne for 2026 skilles med Key i URLen. Hver bruker får tilsendt egen URL med sin key..
-* Statiske lokasjoner hardcodes i appen  
-* userId er definert i tabellen "## Brukere". Merk at "4" er en userId som teksten "4"  
-* Kartets område beregnes fra bruker- og statiske posisjoner.
-* Ugyldige eller tomme posisjoner forkastes.
-* Klikk på en markør åpner Google Maps på den posisjonen via en universell Google Maps URL.
-* Det er ingen funksjon for å fjerne posisjoner. Appen og databasen vil bli slettet når turen er over.
+1. identifiserer deltakeren fra nøkkelen,
+2. logger inn med den felles Firebase-kontoen,
+3. henter en nøyaktig posisjon én gang,
+4. lagrer posisjonen på deltakerens record,
+5. viser alle siste kjente posisjoner og statiske steder på kartet.
 
-## WEB Frontend
+Appen og dataene er ment å være midlertidige og kan slettes når turen er over.
 
-HvorErAlle publisres som en PWA med github-pages.  
-Når HvorErAlle lagres på Hjem-Skjermen skal den ha et eget ikon.  
+## Faktisk oppstarts- og kjøreflyt
 
-* PWA-en må ha `manifest.webmanifest`, service worker, HTTPS, `start_url`, `display`, `theme_color`, `background_color` og ikoner.
-* Appen deployes med GitHub Actions med adresse "https://bamsen61.github.io/HvorErAlle/index.html?Key=9MOvJJGRc7"  
-  "Key" er forskjellig for hver bruker.  
+1. `site/index.html` validerer `Key` før resten av appen lastes.
+2. Gyldig nøkkel lagres som `hva-key` i `localStorage`. Dette gjør at PWA-en kan startes fra hjemmeskjermen uten `Key` i `start_url`.
+3. Hvis URL-en inneholder en ugyldig nøkkel, tømmes dokumentet umiddelbart og nettleseren sendes til `about:blank`.
+4. Firebase initialiseres som en navngitt app med navnet `hvoreralle`.
+5. Den felles Firebase-kontoen logger inn med `LOCAL` persistence.
+6. En Realtime Database-listener kobles til `/hvoreralle`.
+7. Appen ber om en ny posisjon med høy nøyaktighet.
+8. Kartet oppdateres live når Firebase-data endres.
+9. Posisjonen hentes på nytt én gang når appen igjen får fokus eller blir synlig etter å ha vært i bakgrunnen.
 
-## Kart
+Posisjonskallet bruker:
 
-* Det interaktive kartet i appen skal lages med Leaflet og kartdata fra OpenStreetMap.
-* OpenStreetMaps standard raster tiles skal lastes fra `https://tile.openstreetmap.org/{z}/{x}/{y}.png` over HTTPS.
-* Leaflet-versjonen skal låses til en konkret, testet versjon. Leaflet JavaScript og CSS kan lagres lokalt i repoet slik at appen ikke er avhengig av en CDN.
-* Kartet krever ingen Google Maps API key eller Google Cloud billing account.
-* Synlig attribution skal alltid vises på kartet: `© OpenStreetMap contributors`, med lenke til `https://www.openstreetmap.org/copyright`.
-* Service worker skal ikke forhåndslaste eller lage egen offline-cache av OpenStreetMap tiles. Nettleserens vanlige HTTP-cache skal brukes slik at OpenStreetMaps cache-regler respekteres.
-* Det skal ikke implementeres bulk download, tile scraping eller offline-nedlasting av kartområder.
-* Tile URL skal defineres ett sted i JavaScript slik at kartleverandør enkelt kan byttes senere.
-* Markører, farger, popup og automatisk kartutsnitt skal håndteres av Leaflet.
-* Klikk på en markør skal åpne følgende universelle Google Maps URL i ny fane eller Google Maps-appen hvis den er installert:
-  `https://www.google.com/maps/search/?api=1&query=<latitude>%2C<longitude>`
-* Latitude og longitude skal URL-encodes før Google Maps URL-en åpnes.
-* Google Maps URLs krever ikke API key eller billing account.
+* `enableHighAccuracy: true`
+* `maximumAge: 0`
+* `timeout: 20000`
 
-## Lage ikon
+Hvis brukeren avslår location permission, termineres appen og innholdet fjernes. Andre posisjonsfeil vises som statusmelding, og appen kan prøve igjen neste gang den får fokus.
 
-Lage icon filer 192x192 og 512x512 PNG  
-Lage 180x180 `apple-touch-icon`.  
+## URL-nøkler
 
-Ikonet skal vise en stilisert hest som bakgrun og et stilisert fly som fyller ikonet i forgrunn.
+Det finnes nøyaktig 11 gyldige nøkler. Listen finnes både i den tidlige valideringen i `site/index.html` og som `USERS` i `site/js/core.mjs`.
 
-## Database
+Disse to listene må alltid oppdateres samtidig.
 
-Felles bruker for tilgang til databasen skal være:  
-* Userid: morten.steien@getmail.no
-* Passord: pTkAcyX8d9
+| Key | userID |
+|---|---|
+| `J2ZrXMP0wj` | `4` |
+| `Tst5rLb7Ae` | Frank |
+| `f4XPSqhTJD` | Herold |
+| `9MOvJJGRc7` | Kropp |
+| `gsvweXC8cB` | Magne |
+| `M2tgVaUDrK` | Martin |
+| `qhEI1lwqDq` | Ole Tom |
+| `rZGKuHEAnw` | Steinar |
+| `hOGUL3Ijh5` | Stig |
+| `ifP5y9KtfJ` | TC |
+| `tjwXHGA8b8` | Tedd |
 
-App skal bruke Firebase Realtime database  
-* Database url: ```https://handleliste-3bdaa-default-rtdb.europe-west1.firebasedatabase.app/```  
-* Topplevel er ```hvoreralle```  
-* Samme Firebase-prosjekt som `handleliste-3bdaa` skal brukes.  
+`userID` for brukeren `4` skal alltid behandles som tekst.
 
-Databasekonfigurasjon for eksisterende app finnes her: "D:\GIT\ShoppingList-NoBackend"
+## Firebase og sikkerhet
 
-NB!! Ingen endringer må gjøres som ødelegger eller endre funksjonen til data under "handleliste"
+Firebase-prosjektet deles med Handleliste:
 
-Opprett Firebase Authentication og Realtime Database Security Rules.  
-Ny felles bruker kan lese og skrive til alle records og felter under "hvoreralle"..
+* Firebase project ID: `handleliste-3bdaa`
+* Realtime Database: `https://handleliste-3bdaa-default-rtdb.europe-west1.firebasedatabase.app/`
+* HvorErAlle-noden: `/hvoreralle`
+* Handleliste-noden: `/handleliste`
+* HvorErAlle-konto: `morten.steien@getmail.no`
 
-### Felter
+Brukernavn og passord er hardkodet etter uttrykkelig akseptert risikonivå. Verdiene ligger Base64-kodet inne i `authenticate()` i `site/app.js`. Dette skjuler dem bare visuelt og er ikke reell hemmeligholdelse i en offentlig klientapplikasjon. Passord skal ikke gjentas i dokumentasjon eller andre filer.
 
-| Feltnavn  | Beskrivelse                                   |  
-|-----------|-----------------------------------------------|  
-| Key       | Index i databasen og ID i innvitasjonsmail    |  
-| userID    | Brukerens navn. Se liste i "## Brukere"       |  
-| Location  | Lagres på samme format som Google Maps bruker |  
-| Timestamp | Lagres på formatet YYYY-MM-DD hh:mm:ss        |  
-| Platform  | En av: Ukjent, Android, IOS, Static           |  
+### Auth-isolering fra Handleliste
 
-Statiske lokasjoner har Platform = Static  
-Brukere som ikke har logget inn første gang har Platform = Ukjent
+Begge appene ligger under samme origin, `bamsen61.github.io`, og bruker samme Firebase-prosjekt. HvorErAlle må derfor bruke den navngitte Firebase-appen `hvoreralle`, ikke `[DEFAULT]`.
 
-### Eksempel JSON fra Firebase
+Dette hindrer HvorErAlle-kontoen i å overskrive Handlelistes lagrede Auth-session. Koden rydder også opp en eventuell gammel HvorErAlle-session som tidligere ble lagret i `[DEFAULT]`.
 
-Location skal følge formatet til Google Maps
-Accuracy viser "Fine" eller "Coarse" etter hva brukeren har tillatt.
+Denne isoleringen må bevares ved senere endringer.
 
+### Realtime Database-regler
+
+Gjeldende regler ligger i `database.rules.json`.
+
+* Eksisterende Handleliste-brukere har tilgang via de autoriserte UID-ene på rotnivå.
+* HvorErAlle-kontoen har lese- og skrivetilgang under `/hvoreralle` basert på e-postadressen.
+* Records under `/hvoreralle` valideres mot tillatte felter og verdier.
+* Ukjente felt avvises med `$other: { ".validate": false }`.
+* HvorErAlle-kontoen skal ikke gis tilgang til `/handleliste`.
+
+Regelfilen finnes også i `D:\GIT\ShoppingList-NoBackend\database.rules.json`. De to kopiene må holdes synkronisert når Firebase-reglene endres, slik at en senere deploy fra ett repo ikke ødelegger den andre appen.
+
+GitHub Actions publiserer bare nettstedet. Database-regler publiseres separat fra repo-roten:
+
+```powershell
+firebase deploy --only database
 ```
+
+Kontroller alltid både Handleliste og HvorErAlle etter en regelendring.
+
+## Datamodell
+
+Hver record ligger under `/hvoreralle/<Key>`.
+
+| Felt | Type og innhold |
+|---|---|
+| `userID` | Tekst, maksimalt 60 tegn |
+| `Platform` | `Ukjent`, `Android`, `IOS` eller `Static` |
+| `Timestamp` | Lokal tid på formatet `YYYY-MM-DD hh:mm:ss` |
+| `Location` | `latitude, longitude` |
+| `Accuracy` | Valgfritt felt: `Fine` eller `Coarse` |
+
+`Accuracy` settes til `Fine` når nettleseren rapporterer inntil 100 meter, ellers `Coarse`.
+
+Eksempel:
+
+```json
 {
   "9MOvJJGRc7": {
     "userID": "Kropp",
     "Platform": "Android",
-    "Timestamp": "2026-07-04 10:10:10"
-    "Location": "59.95797780022199, 11.052250640577984",
+    "Timestamp": "2026-07-04 10:10:10",
+    "Location": "50.052312560225346, 19.917011600564315",
+    "Accuracy": "Fine"
   }
 }
 ```
 
-## Funksjon for brukere
+Ugyldige, tomme eller geografisk umulige koordinater forkastes før visning.
 
-### Første gang
+## Kart, markører og labels
 
-1. Brukeren får en personlig tilpasset lenke på SMS med navnet kodet inn.  
-2. Gi tilgang til å lese detaljert posisjon. Hver gang appen brukes.  
-3. Appen legges på hjem-skjermen.  
-4. Hvis brukeren avslår location permission termineres appen.  
+* Kartet bruker Leaflet 1.9.4, lagret lokalt under `site/vendor/leaflet/`.
+* Kartdata hentes fra OpenStreetMaps standard raster tiles:
+  `https://tile.openstreetmap.org/{z}/{x}/{y}.png`
+* Synlig attribution er alltid med: `© OpenStreetMap contributors`.
+* OpenStreetMap-tiles lagres ikke i appens service worker-cache.
+* Kartutsnittet beregnes automatisk fra alle gyldige bruker- og stedsposisjoner.
 
-### Normal bruk
+Markørfarger:
 
-1. Når appen åpnes, leses nøyaktig posisjon fra telefonen.  
-   Posisjonen leses bare en gang, hver gang applikasjonen får fokus.  
-2. Posisjonen lagres i en felles database med siste posisjon pr. navn.  
-3. Et interaktivt Leaflet-kart med OpenStreetMap som kartbakgrunn viser alle brukernes siste posisjon.  
-   Kartet skal bare dekke det området som inneholder posisjoner.
-4. Kartet viser personer
-	* Grønn markør for 0 - 20 minutter
-	* Gul markør for 20 - 45 minutter
-	* Rød markør for mer enn 45 minutter
-5. Kartet viser hvit markør for statiske steder
-	* Hotell
-	* Restauranter
-	* Aktiviteter
-6. Kartet skal oppdateres live fra Firebase. Når brukeren klikker på en markør, åpnes Google Maps på den valgte posisjonen slik at brukeren kan få veibeskrivelse og lignende.
+* Grønn: 0–20 minutter gammel.
+* Gul: mer enn 20 og inntil 45 minutter gammel.
+* Rød: mer enn 45 minutter gammel eller ugyldig timestamp.
+* Hvit: statisk sted.
 
-## Brukere
+Alle markører har en synlig label med `userID`. Labels:
 
-Det er 11 brukere i år.  
-Brukerne er allerede definert i databasen.  
+* plasseres automatisk uten overlapp så langt skjermplassen tillater,
+* fordeles på begge sider av markørene,
+* kobles til markøren med en tynn linje,
+* beregnes på nytt ved zoom, panorering og endring av kartstørrelse,
+* er klikkbare knapper og bruker samme aktiveringsfunksjon som markøren.
 
-| Key        | userID  | Platform | Timestamp           | Location                               |  
-|------------|---------|----------|---------------------|----------------------------------------|  
-| J2ZrXMP0wj | 4       | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| Tst5rLb7Ae | Frank   | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| f4XPSqhTJD | Herold  | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| 9MOvJJGRc7 | Kropp   | Android  | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| gsvweXC8cB | Magne   | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| M2tgVaUDrK | Martin  | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| qhEI1lwqDq | Ole Tom | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| rZGKuHEAnw | Steinar | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| hOGUL3Ijh5 | Stig    | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| ifP5y9KtfJ | TC      | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| tjwXHGA8b8 | Tedd    | Ukjent   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
+Klikk på markør eller label åpner popup og deretter denne universelle Google Maps-URL-en:
+
+```text
+https://www.google.com/maps/search/?api=1&query=<url-encoded latitude,longitude>
+```
 
 ## Statiske posisjoner
 
-Det er 6 statiske lokasjoner i år.  
-Lokasjonene er allerede definert i databasen.  
+Statiske steder er hardkodet som `STATIC_LOCATIONS` i `site/js/core.mjs`. Firebase-data med samme key vil overstyre den hardkodede verdien ved rendering.
 
-| Key        | userID        | Platform | Timestamp           | Location                               |  
-|------------|---------------|----------|---------------------|----------------------------------------|  
-| bjDUdO1y15 | Hotell        | Static   | 2026-07-04 10:10:10 | 50.052312560225346, 19.917011600564315 |  
-| livqXKjvUQ | Butcher Grill | Static   | 2026-07-04 10:10:10 | 50.06008256071363, 19.937353473971022  |  
-| yJ2R5TxfRA | Chopin Hall   | Static   | 2026-07-04 10:10:10 | 50.053139215413964, 19.937353475639696 |  
-| 4mfykAkXdh | Saltgruver    | Static   | 2026-07-04 10:10:10 | 49.98453352281953, 20.054083210160986  |  
-| b1sR8OHdGM | Big Gun       | Static   | 2026-07-04 10:10:10 | 50.0253557878794, 19.864912375686774   |  
-| gTyS7E0bd8 | Flyplass      | Static   | 2026-07-04 10:10:10 | 50.081347188044134, 19.78594814351061  |  
+| Key | userID | Location |
+|---|---|---|
+| `bjDUdO1y15` | Hotell | `50.052312560225346, 19.917011600564315` |
+| `livqXKjvUQ` | Butcher Grill | `50.06008256071363, 19.937353473971022` |
+| `yJ2R5TxfRA` | Chopin Hall | `50.053139215413964, 19.937353475639696` |
+| `4mfykAkXdh` | Saltgruver | `49.98453352281953, 20.054083210160986` |
+| `b1sR8OHdGM` | Big Gun | `50.0253557878794, 19.864912375686774` |
+| `gTyS7E0bd8` | Flyplass | `50.081347188044134, 19.78594814351061` |
 
-## Telefonliste
+## PWA og cache
 
-| userID  | Telefon   |  
-|---------|-----------|  
-| 4       | 9088 3528 |  
-| Frank   | 9204 5716 |  
-| Herold  | 9159 3333 |  
-| Kropp   | 9002 5903 |  
-| Magne   | 9118 4261 |  
-| Martin  | 7383 4373 |  
-| Ole Tom | 9268 5825 |  
-| Steinar | 9322 9932 |  
-| Stig    | 9384 1324 |  
-| TC      | 9592 7203 |  
-| Tedd    | 9921 7229 |  
+PWA-oppsettet består av:
+
+* `site/manifest.webmanifest`
+* `site/sw.js`
+* ikonene `192x192`, `512x512` og `180x180` for Apple touch
+* HTTPS via GitHub Pages
+* `display: standalone`
+* definert `start_url`, `scope`, `theme_color` og `background_color`
+
+Service worker:
+
+* bruker en eksplisitt cache-versjon, for tiden `hvoreralle-v4`,
+* forhåndslagrer app-shell og lokale biblioteker,
+* bruker network-first for same-origin GET-kall,
+* bruker cache som fallback ved nettverksfeil,
+* kaller `skipWaiting()` og `clients.claim()`,
+* sletter eldre HvorErAlle-cacher ved aktivering,
+* lar OpenStreetMap håndtere tile-caching via vanlig HTTP-cache.
+
+Cache-versjonen i `site/sw.js` skal økes når app-shell-filer endres.
+
+### Kjent cacheproblem på Chrome Android
+
+En eldre installert service worker kan i enkelte tilfeller bli hengende igjen. Symptomene kan være:
+
+* status blir stående på «Henter nøyaktig posisjon …»,
+* bare de seks hardkodede stedene vises etter omtrent ett minutt,
+* samme URL virker umiddelbart i inkognitomodus.
+
+Løsning: slett nettsteddata for `bamsen61.github.io` i Chrome og åpne appen på nytt. Fordi Handleliste bruker samme origin, blir brukeren samtidig logget ut av Handleliste og må logge inn igjen.
+
+## Filstruktur
+
+| Fil/mappe | Ansvar |
+|---|---|
+| `site/index.html` | Tidlig key-validering, CSP, HTML og lasting av lokale biblioteker |
+| `site/app.js` | Firebase, geolocation, live-data, kart, markører og labels |
+| `site/js/core.mjs` | Brukere, statiske steder og testbar kjernelogikk |
+| `site/styles.css` | Responsivt utseende, markører, labels og statusmeldinger |
+| `site/sw.js` | PWA-cache og offline fallback |
+| `site/manifest.webmanifest` | PWA-metadata og ikoner |
+| `site/vendor/` | Låste lokale versjoner av Leaflet og Firebase SDK |
+| `site/icons/` | Ferdige PWA-ikoner |
+| `assets/icon-master.png` | Kildebilde for ikonene |
+| `tests/core.test.mjs` | Automatiske tester og regresjonstester |
+| `database.rules.json` | Samlede Firebase-regler for Handleliste og HvorErAlle |
+| `firebase.json` / `.firebaserc` | Firebase CLI-konfigurasjon |
+| `.github/workflows/deploy-pages.yml` | Automatisk GitHub Pages-publisering |
+
+## Lokal kjøring og verifisering
+
+Start lokal webserver fra repo-roten:
+
+```powershell
+python -m http.server 8080 --directory site
+```
+
+Åpne:
+
+```text
+http://localhost:8080/index.html?Key=9MOvJJGRc7
+```
+
+Kjør automatiske kontroller:
+
+```powershell
+npm test
+npm run check
+```
+
+Gjeldende testsett kontrollerer blant annet:
+
+* alle 11 invitation keys,
+* parsing av posisjon og timestamp,
+* fargegrenser for markøralder,
+* URL-encoding for Google Maps,
+* platform og accuracy,
+* kollisjonsfri labelplassering,
+* isolert Firebase Auth-app,
+* felles aktivering for markør og label.
+
+## Publisering
+
+Workflowen `.github/workflows/deploy-pages.yml` kjører automatisk ved push til `main` og kan også startes manuelt med `workflow_dispatch`.
+
+Normal arbeidsflyt:
+
+```powershell
+npm test
+npm run check
+git diff --check
+git add --all
+git commit -m "Kort beskrivelse"
+git push origin main
+```
+
+Etter push:
+
+1. kontroller at `Deploy to GitHub Pages` fullføres med `success`,
+2. kontroller at produksjonsfilene er oppdatert,
+3. be brukeren utføre høyst én konkret test om gangen dersom manuell mobiltest er nødvendig.
+
+## Sjekkliste for senere endringer
+
+* Bevar tidlig validering og umiddelbar terminering ved ugyldig `Key`.
+* Hold key-listene i `index.html` og `core.mjs` identiske.
+* Bevar den navngitte Firebase-appen `hvoreralle`.
+* Ikke utvid HvorErAlle-kontoens tilgang til `/handleliste`.
+* Synkroniser regelfilen med `ShoppingList-NoBackend` ved regelendringer.
+* Bevar lokal Leaflet/Firebase SDK og synlig OpenStreetMap-attribution.
+* Ikke legg OpenStreetMap-tiles i service worker-cachen.
+* Øk service workerens cache-versjon når app-shell endres.
+* Legg til eller oppdater regresjonstest ved funksjonsendringer.
+* Kjør `npm test`, `npm run check` og `git diff --check` før commit.
+
+## Sensitiv informasjon
+
+Telefonnumre, passord og annen sensitiv kontaktinformasjon skal oppbevares utenfor dette offentlige repoet.
