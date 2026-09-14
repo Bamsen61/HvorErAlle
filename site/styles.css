@@ -1,0 +1,128 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #eaf2f8;
+  color: #102a43;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
+body {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  background: #d9e7f2;
+}
+
+.topbar {
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  min-height: 68px;
+  padding: calc(.55rem + env(safe-area-inset-top)) calc(.8rem + env(safe-area-inset-right)) .55rem calc(.8rem + env(safe-area-inset-left));
+  background: #0b3b66;
+  color: #fff;
+  box-shadow: 0 2px 12px #001b3380;
+}
+
+h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.15;
+}
+
+#identity {
+  margin: .25rem 0 0;
+  color: #d9eaf7;
+  font-size: .82rem;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: .35rem .7rem;
+  font-size: .72rem;
+}
+
+.legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  white-space: nowrap;
+}
+
+.dot {
+  width: .72rem;
+  height: .72rem;
+  border: 1px solid #17324d;
+  border-radius: 50%;
+}
+
+.dot.fresh, .map-marker.fresh { background: #1fbf63; }
+.dot.aging, .map-marker.aging { background: #ffd43b; }
+.dot.stale, .map-marker.stale { background: #e5484d; }
+.dot.static, .map-marker.static { background: #fff; }
+
+main, #map { min-height: 0; }
+main { position: relative; }
+#map { width: 100%; height: 100%; background: #cad9e5; }
+
+.status {
+  position: absolute;
+  z-index: 900;
+  left: 50%;
+  bottom: calc(1rem + env(safe-area-inset-bottom));
+  max-width: min(92vw, 34rem);
+  transform: translateX(-50%);
+  padding: .65rem .9rem;
+  border-radius: .7rem;
+  background: #102a43e8;
+  color: #fff;
+  box-shadow: 0 4px 18px #001b3359;
+  font-size: .86rem;
+  text-align: center;
+  transition: opacity .2s ease;
+}
+
+.status.hidden { opacity: 0; pointer-events: none; }
+.status.error { background: #9f1d24f2; }
+
+.map-marker {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0;
+  box-shadow: 0 2px 7px #001b3380;
+  transform: rotate(-45deg);
+}
+
+.map-marker.static { border-color: #17324d; }
+
+.marker-name {
+  margin: 0 0 .2rem;
+  font-weight: 700;
+}
+
+.marker-time { margin: 0; color: #486581; font-size: .8rem; }
+
+.leaflet-control-attribution { font-size: 10px; }
+
+@media (max-width: 680px) {
+  .topbar { align-items: flex-start; }
+  .legend { max-width: 13rem; }
+}
+
+@media (max-width: 430px) {
+  .topbar { gap: .5rem; }
+  .legend { gap: .2rem .45rem; font-size: .66rem; }
+}

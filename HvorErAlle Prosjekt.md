@@ -80,7 +80,7 @@ Ikonet skal vise en stilisert hest som bakgrun og et stilisert fly som fyller ik
 ## Database
 
 Felles bruker for tilgang til databasen skal være:  
-* Userid: HvorErAlle2026
+* Userid: morten.steien@getmail.no
 * Passord: pTkAcyX8d9
 
 App skal bruke Firebase Realtime database  

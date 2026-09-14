@@ -1,0 +1,60 @@
+{
+  "rules": {
+    ".read": "auth.uid === 'ZDq6ZGvDVDafX8BVlWGRhBoSn9X2' || auth.uid === 'fmVOzYiAtsOUNnUE33VZbwHR0SG3'",
+    ".write": "auth.uid === 'ZDq6ZGvDVDafX8BVlWGRhBoSn9X2' || auth.uid === 'fmVOzYiAtsOUNnUE33VZbwHR0SG3'",
+    "handleliste": {
+      "$itemId": {
+        ".validate": "newData.hasChildren(['Name', 'Shop', 'AddedBy', 'Buy'])",
+        "Name": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+        },
+        "Shop": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+        },
+        "AddedBy": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 50"
+        },
+        "BoughtBy": {
+          ".validate": "newData.isString() && newData.val().length <= 50"
+        },
+        "Buy": {
+          ".validate": "newData.isBoolean()"
+        },
+        "BuyNumber": {
+          ".validate": "newData.isNumber() && newData.val() >= 0"
+        },
+        "BoughtDate": {
+          ".validate": "newData.hasChildren() || newData.val() === null",
+          "$index": {
+            ".validate": "newData.isString()"
+          }
+        }
+      }
+    },
+    "hvoreralle": {
+      ".read": "auth != null && auth.token.email == 'morten.steien@getmail.no'",
+      ".write": "auth != null && auth.token.email == 'morten.steien@getmail.no'",
+      "$recordId": {
+        ".validate": "newData.hasChildren(['userID', 'Platform', 'Timestamp', 'Location'])",
+        "userID": {
+          ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 60"
+        },
+        "Platform": {
+          ".validate": "newData.isString() && (newData.val() == 'Ukjent' || newData.val() == 'Android' || newData.val() == 'IOS' || newData.val() == 'Static')"
+        },
+        "Timestamp": {
+          ".validate": "newData.isString() && newData.val().length == 19"
+        },
+        "Location": {
+          ".validate": "newData.isString() && newData.val().length > 2 && newData.val().length <= 60"
+        },
+        "Accuracy": {
+          ".validate": "newData.isString() && (newData.val() == 'Fine' || newData.val() == 'Coarse')"
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}
