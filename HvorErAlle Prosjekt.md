@@ -6,6 +6,7 @@ Sist kontrollert mot produksjonskoden: 2026-09-15.
 
 * Hvis noe er uklart, spør før endringer gjøres.
 * Alle endringer skal gjøres direkte i filene under `D:\GIT\HvorErAlle\`.
+* Ved hver endringsrunde skal versjonsnummeret økes med 1. Oppdater både den synlige overskriften «HvorErAlle v#» i `site/index.html` og cache-versjonen `hvoreralle-v#` i `site/sw.js`, slik at de alltid er like. Oppdater også versjonsreferanser i dokumentasjon og tester.
 * Ikke list lange endringer i chat.
 * Hvis noe må testes av brukeren, be om kun én test av gangen og vent på svar.
 * Når jeg bruker «Du», «Deg» eller lignende, refererer dette til Codex ChatGPT.
@@ -206,7 +207,7 @@ PWA-oppsettet består av:
 
 Service worker:
 
-* bruker en eksplisitt cache-versjon, for tiden `hvoreralle-v5`,
+* bruker en eksplisitt cache-versjon, for tiden `hvoreralle-v6`,
 * forhåndslagrer app-shell og lokale biblioteker,
 * bruker network-first med HTTP-revalidering og 10 sekunders nettverkstimeout for GET-kall innenfor appens scope,
 * bruker egen cache som fallback ved nettverksfeil, timeout og HTTP-feil; HTML-fallback gjelder bare navigasjon,
@@ -214,7 +215,7 @@ Service worker:
 * sletter eldre HvorErAlle-cacher ved aktivering,
 * lar OpenStreetMap håndtere tile-caching via vanlig HTTP-cache.
 
-Cache-versjonen i `site/sw.js` skal økes når app-shell-filer endres.
+Cache-versjonen i `site/sw.js` skal økes når app-shell-filer endres. Overskriften i `site/index.html` viser «HvorErAlle v6»; hold dette versjonsnummeret likt cache-versjonen ved senere oppdateringer.
 
 ### Robust oppdatering (2026-09-15)
 

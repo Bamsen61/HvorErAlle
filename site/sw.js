@@ -1,4 +1,4 @@
-const CACHE_NAME = "hvoreralle-v5";
+const CACHE_NAME = "hvoreralle-v6";
 const APP_SHELL = [
   "./index.html",
   "./styles.css",

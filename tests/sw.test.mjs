@@ -17,7 +17,7 @@ function worker({ fetch = async () => { throw Error('offline'); }, match = async
 }
 const request = { url: 'https://example.com/HvorErAlle/app.js', method: 'GET', mode: 'cors' };
 test('activation preserves caches belonging to other apps', async () => {
-  const w = worker({ keys: ['handleliste-v1', 'hvoreralle-v4', 'hvoreralle-v5'] });
+  const w = worker({ keys: ['handleliste-v1', 'hvoreralle-v4', 'hvoreralle-v6'] });
   let done; w.handlers.activate({ waitUntil: promise => done = promise }); await done;
   assert.deepEqual(w.deleted, ['hvoreralle-v4']);
 });
