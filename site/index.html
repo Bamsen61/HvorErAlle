@@ -29,6 +29,23 @@
 
       try { localStorage.setItem("hva-key", key); } catch {}
       window.__HVA_KEY__ = key;
+
+      if ("serviceWorker" in navigator) {
+        let reloading = false;
+        const wasControlled = Boolean(navigator.serviceWorker.controller);
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (!wasControlled || reloading) return;
+          reloading = true;
+          location.reload();
+        });
+        const registration = navigator.serviceWorker.register("./sw.js", { updateViaCache: "none" });
+        registration.catch(console.error);
+        const checkForUpdate = () => registration.then(worker => worker.update()).catch(console.error);
+        document.addEventListener("visibilitychange", () => {
+          if (document.visibilityState === "visible") checkForUpdate();
+        });
+        window.addEventListener("online", checkForUpdate);
+      }
     })();
   </script>
   <link rel="manifest" href="./manifest.webmanifest">

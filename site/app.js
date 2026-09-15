@@ -258,10 +258,6 @@ async function start() {
   }
 }
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(console.error));
-}
-
 setInterval(renderMarkers, 60000);
 map.on("move zoom resize", scheduleLabelRender);
 start();

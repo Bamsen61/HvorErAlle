@@ -1,6 +1,6 @@
 # HvorErAlle – prosjektbeskrivelse og driftsgrunnlag
 
-Sist kontrollert mot produksjonskoden: 2026-09-14.
+Sist kontrollert mot produksjonskoden: 2026-09-15.
 
 ## Instruksjoner Codex ChatGPT skal følge
 
@@ -206,17 +206,23 @@ PWA-oppsettet består av:
 
 Service worker:
 
-* bruker en eksplisitt cache-versjon, for tiden `hvoreralle-v4`,
+* bruker en eksplisitt cache-versjon, for tiden `hvoreralle-v5`,
 * forhåndslagrer app-shell og lokale biblioteker,
-* bruker network-first for same-origin GET-kall,
-* bruker cache som fallback ved nettverksfeil,
+* bruker network-first med HTTP-revalidering og 10 sekunders nettverkstimeout for GET-kall innenfor appens scope,
+* bruker egen cache som fallback ved nettverksfeil, timeout og HTTP-feil; HTML-fallback gjelder bare navigasjon,
 * kaller `skipWaiting()` og `clients.claim()`,
 * sletter eldre HvorErAlle-cacher ved aktivering,
 * lar OpenStreetMap håndtere tile-caching via vanlig HTTP-cache.
 
 Cache-versjonen i `site/sw.js` skal økes når app-shell-filer endres.
 
-### Kjent cacheproblem på Chrome Android
+### Robust oppdatering (2026-09-15)
+
+Registrering skjer tidlig i index.html, uavhengig av app.js og window.load, med updateViaCache: none. Ny aktiv worker laster en allerede kontrollert side på nytt én gang. Oppdateringer sjekkes også ved retur til forgrunnen og online-event. Forhåndslagring omgår gammel HTTP-cache. Cache-opprydding er begrenset til hvoreralle- og berører ikke Handlelistes cacher, Auth eller data. GPS-timeout er fortsatt 20 sekunder og utløser ikke cache-sletting.
+
+Eldre installerte versjoner må først motta den nye workeren; endringene kan ikke garantere reparasjon før dette skjer. Den tidligere observerte feilen er ikke bekreftet reprodusert.
+
+### Tidligere cacheproblem på Chrome Android
 
 En eldre installert service worker kan i enkelte tilfeller bli hengende igjen. Symptomene kan være:
 
