@@ -1,6 +1,6 @@
 # HvorErAlle
 
-Statisk PWA for deling av gruppens siste kjente posisjoner. Nettstedet publiseres fra `site/` med GitHub Actions.
+Statisk PWA for deling av gruppens siste kjente posisjoner. Appen er tatt ut av bruk. GitHub Pages-publiseringen er avviklet, og deploy-workflowen er fjernet. Kildekoden i `site/` er beholdt for lokal kjøring.
 
 ## Lokal kjøring
 
@@ -17,8 +17,4 @@ npm test
 npm run check
 ```
 
-Firebase Realtime Database-reglene ligger i `database.rules.json` og kan deployes med:
-
-```powershell
-firebase deploy --only database
-```
+Firebase-prosjektet deles med Handleliste. Data, regler og Auth er beholdt uendret ved avviklingen. Ikke deploy regler som del av avviklingen. Regelfilen ligger i `database.rules.json`; eventuell senere regelendring må følge prosjektbeskrivelsen.

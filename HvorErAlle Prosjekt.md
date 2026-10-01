@@ -1,6 +1,6 @@
 # HvorErAlle – prosjektbeskrivelse og driftsgrunnlag
 
-Sist kontrollert mot produksjonskoden: 2026-09-15.
+Sist oppdatert: 2026-10-01. Appen er tatt ut av bruk; GitHub Pages-publiseringen er avviklet.
 
 ## Instruksjoner Codex ChatGPT skal følge
 
@@ -14,16 +14,17 @@ Sist kontrollert mot produksjonskoden: 2026-09-15.
 
 ## Status
 
-HvorErAlle er ferdig bygget og publisert som en statisk Progressive Web App (PWA).
+HvorErAlle er ikke lenger i bruk. GitHub-deploy er avviklet 2026-10-01.
 
-* GitHub-repo: `https://github.com/Bamsen61/HvorErAlle`
-* Lokal kopi: `D:\GIT\HvorErAlle\`
-* Produksjon: `https://bamsen61.github.io/HvorErAlle/`
-* Eksempel for Kropp: `https://bamsen61.github.io/HvorErAlle/index.html?Key=9MOvJJGRc7`
-* Publisering skjer automatisk med GitHub Actions ved hver push til `main`.
-* Nettsiden publiseres fra mappen `site/`.
-* Det er ingen build-prosess; applikasjonen består av statisk HTML, CSS og JavaScript.
-* Android Chrome er testet. Løsningen er også tilpasset iOS Safari så langt det er praktisk.
+* GitHub-repo: `https://github.com/Bamsen61/HvorErAlle` (kildekode og historikk beholdt).
+* Lokal kopi: `D:\GIT\HvorErAlle\`.
+* Tidligere produksjonsadresse: `https://bamsen61.github.io/HvorErAlle/` (avpublisert i GitHub Pages).
+* Workflowen `.github/workflows/deploy-pages.yml` er fjernet. Push til `main` publiserer ikke lenger appen.
+* Lokal arkivversjon er v7. Overskriften, cache-versjonen og testreferansen er oppdatert fra v6 til v7 etter prosjektinstruksjonene.
+* Firebase-prosjektet `handleliste-3bdaa`, database-data, regler og Auth er uendret. Ingen Firebase-deploy er utført.
+* Handleliste-repoet og Handlelistes GitHub Pages-publisering er ikke endret.
+* Kildekoden i `site/` og eksisterende tester er beholdt for lokal kjøring. Resten av dokumentet beskriver den bevarte appen.
+* Allerede installerte PWA-er kan fortsatt ha lokal cache. Avpublisering sletter ikke klientcache eller Firebase-data. Ikke slett nettsteddata for hele `bamsen61.github.io`, siden dette også berører Handleliste.
 
 ## Formål
 
@@ -113,7 +114,7 @@ Gjeldende regler ligger i `database.rules.json`.
 
 Regelfilen finnes også i `D:\GIT\ShoppingList-NoBackend\database.rules.json`. De to kopiene må holdes synkronisert når Firebase-reglene endres, slik at en senere deploy fra ett repo ikke ødelegger den andre appen.
 
-GitHub Actions publiserer bare nettstedet. Database-regler publiseres separat fra repo-roten:
+Den fjernede GitHub Actions-workflowen publiserte bare nettstedet. Database-regler publiseres separat fra repo-roten og skal ikke deployes som del av avviklingen:
 
 ```powershell
 firebase deploy --only database
@@ -201,13 +202,13 @@ PWA-oppsettet består av:
 * `site/manifest.webmanifest`
 * `site/sw.js`
 * ikonene `192x192`, `512x512` og `180x180` for Apple touch
-* HTTPS via GitHub Pages
+* tidligere HTTPS via GitHub Pages (nå avpublisert)
 * `display: standalone`
 * definert `start_url`, `scope`, `theme_color` og `background_color`
 
 Service worker:
 
-* bruker en eksplisitt cache-versjon, for tiden `hvoreralle-v6`,
+* bruker en eksplisitt cache-versjon, for tiden `hvoreralle-v7`,
 * forhåndslagrer app-shell og lokale biblioteker,
 * bruker network-first med HTTP-revalidering og 10 sekunders nettverkstimeout for GET-kall innenfor appens scope,
 * bruker egen cache som fallback ved nettverksfeil, timeout og HTTP-feil; HTML-fallback gjelder bare navigasjon,
@@ -215,7 +216,7 @@ Service worker:
 * sletter eldre HvorErAlle-cacher ved aktivering,
 * lar OpenStreetMap håndtere tile-caching via vanlig HTTP-cache.
 
-Cache-versjonen i `site/sw.js` skal økes når app-shell-filer endres. Overskriften i `site/index.html` viser «HvorErAlle v6»; hold dette versjonsnummeret likt cache-versjonen ved senere oppdateringer.
+Cache-versjonen i `site/sw.js` skal økes når app-shell-filer endres. Overskriften i `site/index.html` viser «HvorErAlle v7»; hold dette versjonsnummeret likt cache-versjonen ved senere oppdateringer.
 
 ### Robust oppdatering (2026-09-15)
 
@@ -249,7 +250,7 @@ Løsning: slett nettsteddata for `bamsen61.github.io` i Chrome og åpne appen p�
 | `tests/core.test.mjs` | Automatiske tester og regresjonstester |
 | `database.rules.json` | Samlede Firebase-regler for Handleliste og HvorErAlle |
 | `firebase.json` / `.firebaserc` | Firebase CLI-konfigurasjon |
-| `.github/workflows/deploy-pages.yml` | Automatisk GitHub Pages-publisering |
+| `.github/workflows/deploy-pages.yml` | Fjernet 2026-10-01 for å stoppe GitHub Pages-publisering |
 
 ## Lokal kjøring og verifisering
 
@@ -285,24 +286,17 @@ Gjeldende testsett kontrollerer blant annet:
 
 ## Publisering
 
-Workflowen `.github/workflows/deploy-pages.yml` kjører automatisk ved push til `main` og kan også startes manuelt med `workflow_dispatch`.
+GitHub Pages-nettstedet for `Bamsen61/HvorErAlle` er avpublisert via **Settings → Pages → Unpublish site**. Deploy-workflowen er fjernet fra `main`, slik at senere push ikke automatisk publiserer appen igjen. GitHub-repoet og tidligere deploy-historikk er beholdt.
 
-Normal arbeidsflyt:
+For å ta appen i bruk igjen må publisering aktiveres uttrykkelig og en deploy-workflow gjenopprettes. Ikke gjør endringer i Handlelistes repo eller i det delte Firebase-prosjektet for å gjenopprette GitHub Pages.
+
+Kontroller før commit:
 
 ```powershell
 npm test
 npm run check
 git diff --check
-git add --all
-git commit -m "Kort beskrivelse"
-git push origin main
 ```
-
-Etter push:
-
-1. kontroller at `Deploy to GitHub Pages` fullføres med `success`,
-2. kontroller at produksjonsfilene er oppdatert,
-3. be brukeren utføre høyst én konkret test om gangen dersom manuell mobiltest er nødvendig.
 
 ## Sjekkliste for senere endringer
 
